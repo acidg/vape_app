@@ -3,4 +3,8 @@
     <string name="temp_unit"> °C</string>
     <string name="btn_temp_up_description">Rise Temperature</string>
     <string name="btn_temp_down_description">Lower Temperature</string>
+    <string name="menu_connect">Connect</string>
+    <string name="plot_title">Temperature</string>
+    <string name="sign_percent">%</string>
+    <string name="sign_voltage">V</string>
 </resources>

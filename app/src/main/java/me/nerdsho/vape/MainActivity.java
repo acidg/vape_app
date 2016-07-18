@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (socket.isConnected()) {
             Toast.makeText(MainActivity.this, "Connected!", Toast.LENGTH_SHORT).show();
-            startPlotUpater();
+            startPlotUpdater();
         } else {
             Toast.makeText(MainActivity.this, "Connection could not be established", Toast.LENGTH_SHORT).show();
         }
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Starts a background thread listening for new data on the bluetooth connection and updating the plot.
      */
-    private void startPlotUpater() {
+    private void startPlotUpdater() {
         this.plotUpater = new Thread(new Runnable() {
             public void run() {
                 BufferedReader connection;

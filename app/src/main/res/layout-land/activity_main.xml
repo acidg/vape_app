@@ -10,13 +10,18 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="50"
-            android:layout_gravity="top">
+            android:layout_gravity="top"
+            xmlns:ap="http://schemas.android.com/apk/res-auto">
 
         <com.androidplot.xy.XYPlot
-                android:id="@+id/tempPlot"
+                android:id="@+id/plotTemperature"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                title="@string/plot_title"/>
+                ap:backgroundColor="@color/ap_transparent"
+                ap:borderThickness="0dp"
+                ap:labelTextSize="30dp"
+                android:layout_gravity="left"
+                androidPlot.graphWidget.marginLeft="18dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -24,80 +29,143 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="50"
-            android:padding="30dp">
+            android:padding="10dp"
+            android:baselineAligned="false">
 
         <LinearLayout
                 android:orientation="vertical"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1">
 
             <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:baselineAligned="false"
+                    android:orientation="vertical"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
                     android:gravity="center">
 
-                <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="80dp"
-                        android:id="@+id/iconBattery"
-                        android:src="@drawable/ic_battery"
-                        android:layout_margin="10dp"/>
+                <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start|center"
+                        android:layout_margin="10dp">
+
+                    <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/thermometer"/>
+
+                    <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:id="@+id/tvCurrentTemperature"
+                            />
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:text="@string/temp_unit"
+                            android:layout_margin="5dp"
+                            />
+                </LinearLayout>
 
                 <LinearLayout
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center">
+                        android:layout_height="wrap_content"
+                        android:gravity="start|center"
+                        android:layout_margin="10dp">
+
+                    <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/gauge"/>
+
+                    <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:id="@+id/tvCurrentHeat"
+                            />
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:text="@string/sign_percent"
+                            android:layout_margin="5dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:gravity="center"
+                        android:layout_margin="10dp">
+
+                    <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_battery"
+                            />
 
                     <LinearLayout
-                            android:orientation="horizontal"
+                            android:orientation="vertical"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="start|center">
+                            android:layout_height="wrap_content">
 
-                        <TextView
-                                android:layout_width="wrap_content"
+                        <LinearLayout
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textAppearance="?android:attr/textAppearanceLarge"
-                                android:text="85"
-                                android:id="@+id/tvBatteryPercents"
-                                />
+                                android:gravity="center|start">
 
-                        <TextView
-                                android:layout_width="wrap_content"
+                            <TextView
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="?android:attr/textAppearanceLarge"
+                                    android:id="@+id/tvBatteryVoltage"
+                                    android:textAlignment="textEnd"
+                                    />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="?android:attr/textAppearanceLarge"
+                                    android:text="@string/sign_voltage"
+                                    android:layout_margin="5dp"/>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textAppearance="?android:attr/textAppearanceLarge"
-                                android:text="@string/sign_percent"
-                                android:id="@+id/signPercent"
-                                android:layout_margin="5dp"/>
+                                android:gravity="center|start">
+
+                            <TextView
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="?android:attr/textAppearanceLarge"
+                                    android:id="@+id/tvBatteryPercentage"
+                                    android:textAlignment="textEnd"
+                                    />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="?android:attr/textAppearanceLarge"
+                                    android:text="@string/sign_percent"
+                                    android:layout_margin="5dp"/>
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="start|center">
-
-                        <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="?android:attr/textAppearanceLarge"
-                                android:text="3,85"
-                                android:id="@+id/tvBatteryVoltage"
-                                />
-
-                        <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="?android:attr/textAppearanceLarge"
-                                android:text="@string/sign_voltage"
-                                android:id="@+id/signVolts"
-                                android:layout_margin="5dp"/>
-                    </LinearLayout>
                 </LinearLayout>
 
             </LinearLayout>
@@ -110,7 +178,8 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center_vertical"
                 android:weightSum="1"
-                android:gravity="center">
+                android:gravity="center"
+                android:padding="5dp">
 
             <ImageView
                     android:layout_width="90dp"
@@ -139,7 +208,6 @@
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceLarge"
                         android:text="@string/temp_unit"
-                        android:id="@+id/signTemperatureUnit"
                         android:textSize="30sp"
                         android:paddingStart="5dp"
                         android:paddingLeft="5dp"/>

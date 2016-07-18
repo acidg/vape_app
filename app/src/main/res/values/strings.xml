@@ -5,6 +5,10 @@
     <string name="btn_temp_down_description">Lower Temperature</string>
     <string name="menu_connect">Connect</string>
     <string name="plot_title">Temperature</string>
+    <string name="plot_temperature">Temperature</string>
+    <string name="plot_heating">Heating</string>
     <string name="sign_percent">%</string>
     <string name="sign_voltage">V</string>
+    <string name="current_temperature">Temperature</string>
+    <string name="current_heat">Heating Power</string>
 </resources>

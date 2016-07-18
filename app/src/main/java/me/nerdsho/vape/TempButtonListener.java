@@ -3,7 +3,6 @@ package me.nerdsho.vape;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
 /**
@@ -16,41 +15,33 @@ import android.view.View.OnTouchListener;
  * If it runs slow, it does not generate skipped onClicks. Can be rewritten to
  * achieve this.
  */
-public class RepeatListener implements OnTouchListener {
+public class TempButtonListener implements OnTouchListener {
+    /**
+     * The initial time in milliseconds, after which the first button pressed event is fired.
+     */
+    private static final int INITIAL_INTERVAL = 400;
 
+    /**
+     * The time in milliseconds, after which each subsequent button pressed event is fired.
+     */
+    private static final int SUBSEQUENT_INTERVAL = 50;
+
+    private final TempButtonCallback callback;
     private Handler handler = new Handler();
-
-    private int initialInterval;
-    private final int normalInterval;
-    private final OnClickListener clickListener;
-
+    private View downView;
     private Runnable handlerRunnable = new Runnable() {
         @Override
         public void run() {
-            handler.postDelayed(this, normalInterval);
-            clickListener.onClick(downView);
+            handler.postDelayed(this, SUBSEQUENT_INTERVAL);
+            callback.onTick();
         }
     };
 
-    private View downView;
-
     /**
-     * @param initialInterval The interval after first click event
-     * @param normalInterval  The interval after second and subsequent click
-     *                        events
-     * @param clickListener   The OnClickListener, that will be called
-     *                        periodically
+     * @param callback        The TempButtonCallback, that will be called periodically
      */
-    public RepeatListener(int initialInterval, int normalInterval,
-                          OnClickListener clickListener) {
-        if (clickListener == null)
-            throw new IllegalArgumentException("null runnable");
-        if (initialInterval < 0 || normalInterval < 0)
-            throw new IllegalArgumentException("negative interval");
-
-        this.initialInterval = initialInterval;
-        this.normalInterval = normalInterval;
-        this.clickListener = clickListener;
+    public TempButtonListener(TempButtonCallback callback) {
+        this.callback = callback;
     }
 
     /**
@@ -60,19 +51,32 @@ public class RepeatListener implements OnTouchListener {
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 handler.removeCallbacks(handlerRunnable);
-                handler.postDelayed(handlerRunnable, initialInterval);
+                handler.postDelayed(handlerRunnable, INITIAL_INTERVAL);
                 downView = view;
                 downView.setPressed(true);
-                clickListener.onClick(view);
+                callback.onTick();
                 return true;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 handler.removeCallbacks(handlerRunnable);
                 downView.setPressed(false);
                 downView = null;
+                callback.onFinal();
                 return true;
             default:
                 return false;
         }
+    }
+
+    public interface TempButtonCallback {
+        /**
+         * Called, every tick.
+         */
+        void onTick();
+
+        /**
+         * Called when the user stops pressing the button.
+         */
+        void onFinal();
     }
 }

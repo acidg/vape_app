@@ -5,12 +5,18 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.FloatRange;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
@@ -95,6 +101,26 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvBatteryPercentage;
 
     /**
+     * Textfield used for changing the P value
+     */
+    private EditText tfdPidP;
+
+    /**
+     * Textfield used for changing the I value
+     */
+    private EditText tfdPidI;
+
+    /**
+     * Textfield used for changing the D value
+     */
+    private EditText tfdPidD;
+
+    /**
+     * The button used to send the PID values to the device
+     */
+    private Button btnSet;
+
+    /**
      * Bluetooth socket to communicate with the Vape.
      */
     private BluetoothSocket socket;
@@ -112,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * The background thread used to update the plot.
      */
-    private Thread plotUpater;
+    private Thread plotUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,10 +154,14 @@ public class MainActivity extends AppCompatActivity {
         tvDesiredTemperature = (TextView) findViewById(R.id.tvDesiredTemperature);
         tvBatteryVoltage = (TextView) findViewById(R.id.tvBatteryVoltage);
         tvBatteryPercentage = (TextView) findViewById(R.id.tvBatteryPercentage);
+        tfdPidP = (EditText) findViewById(R.id.tfdPidP);
+        tfdPidI = (EditText) findViewById(R.id.tfdPidI);
+        tfdPidD = (EditText) findViewById(R.id.tfdPidD);
 
         initButtons();
         initPlot();
         initBluetoothConnection();
+        loadValues();
     }
 
     @Override
@@ -173,8 +203,9 @@ public class MainActivity extends AppCompatActivity {
     private void initButtons() {
         ImageView btnTempUp = (ImageView) findViewById(R.id.btnTempUp);
         ImageView btnTempDown = (ImageView) findViewById(R.id.btnTempDown);
+        Button btnSet = (Button) findViewById(R.id.btnSet);
 
-        btnTempUp.setOnTouchListener(new TempButtonListener(new TempButtonListener.TempButtonCallback() {
+        btnTempUp.setOnTouchListener(new TemperatureButtonListener(new TemperatureButtonListener.TemperatureButtonCallback() {
             @Override
             public void onTick() {
                 updateDesiredTemp = false;
@@ -187,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }));
 
-        btnTempDown.setOnTouchListener(new TempButtonListener(new TempButtonListener.TempButtonCallback() {
+        btnTempDown.setOnTouchListener(new TemperatureButtonListener(new TemperatureButtonListener.TemperatureButtonCallback() {
             @Override
             public void onTick() {
                 updateDesiredTemp = false;
@@ -199,6 +230,13 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.sendTemperature();
             }
         }));
+
+        btnSet.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.sendPID();
+            }
+        });
     }
 
     /**
@@ -222,10 +260,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Loads the values for PID and chosen temperature from the device
+     */
+    private void loadValues() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (socket.isConnected()) {
+                    try {
+                        System.out.println("Loading values");
+                        socket.getOutputStream().write(new byte[]{'t', '?'});
+                        Thread.sleep(300);
+                        socket.getOutputStream().write(new byte[]{'p', '?'});
+                        Thread.sleep(300);
+                    } catch (IOException e) {
+                        System.out.println("Could not send temp to Vape " + e.getMessage());
+                        Toast.makeText(MainActivity.this, "Could not send temp to Vape " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    } catch (InterruptedException e) {
+                        // ignore for now
+                    }
+                }
+
+            }
+        }).start();
+    }
+
+    /**
      * Starts a background thread listening for new data on the bluetooth connection and updating the plot.
      */
     private void startPlotUpdater() {
-        this.plotUpater = new Thread(new Runnable() {
+        this.plotUpdater = new Thread(new Runnable() {
             public void run() {
                 BufferedReader connection;
                 try {
@@ -236,62 +300,74 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 while (!Thread.interrupted() && socket.isConnected()) {
-                    String[] values;
+                    final String[] values;
                     final int savedTemperature;
-                    final float batteryVoltage;
-                    final int batteryPercentage;
-                    final float temp;
-                    final float heat;
 
                     try {
-                        values = connection.readLine().split(";");
-                        if (values.length != 5) {
-                            continue;
+                        String input = connection.readLine();
+                        System.out.println("Got: " + input);
+
+                        values = input.split(";");
+                        switch (values[0]) {
+                            case "s":
+                                final float temp = Float.parseFloat(values[1]);
+                                final float heat = Float.parseFloat(values[2]);
+
+                                if (temperatureSeries.size() > HISTORY_SIZE) {
+                                    temperatureSeries.removeFirst();
+                                    heatingSeries.removeFirst();
+                                }
+
+                                temperatureSeries.addLast(null, temp);
+                                heatingSeries.addLast(null, heat);
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        temperaturePlot.redraw();
+                                        tvCurrentTemperature.setText(values[1]);
+                                        tvCurrentHeat.setText(String.valueOf((int) (Float.parseFloat(values[2]) / MAXIMUM_HEATING_VALUE * 100)));
+                                        tvBatteryVoltage.setText(values[3]);
+                                        tvBatteryPercentage.setText(values[4]);
+                                    }
+                                });
+
+                                continue;
+                            case "p":
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        tfdPidP.setText(values[1]);
+                                        tfdPidI.setText(values[2]);
+                                        tfdPidD.setText(values[3]);
+                                    }
+                                });
+                                continue;
+                            case "t":
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        tvDesiredTemperature.setText(values[1]);
+                                    }
+                                });
+                                continue;
+                            default:
+                                // ignore
                         }
-
-                        savedTemperature = Integer.parseInt(values[0]);
-                        batteryVoltage = Float.parseFloat(values[3]);
-                        batteryPercentage = Integer.parseInt(values[4]);
-                        temp = Float.parseFloat(values[1]);
-                        heat = Float.parseFloat(values[2]);
-                    } catch (IOException e) {
-                        continue;
-                    } catch (NumberFormatException e) {
-                        continue;
+                    } catch (IOException | NumberFormatException e) {
+                        // Could not parse value, ignore
                     }
-
-                    if (temperatureSeries.size() > HISTORY_SIZE) {
-                        temperatureSeries.removeFirst();
-                        heatingSeries.removeFirst();
-                    }
-
-                    temperatureSeries.addLast(null, temp);
-                    heatingSeries.addLast(null, heat);
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            temperaturePlot.redraw();
-                            tvBatteryVoltage.setText(String.format("%.1f", batteryVoltage));
-                            tvBatteryPercentage.setText(String.valueOf(batteryPercentage));
-                            tvCurrentTemperature.setText(String.format("%.1f", temp));
-                            tvCurrentHeat.setText(String.valueOf((int) (heat / MAXIMUM_HEATING_VALUE * 100)));
-                            if (updateDesiredTemp) {
-                                tvDesiredTemperature.setText(String.valueOf(savedTemperature));
-                                desiredTemperature = savedTemperature;
-                            }
-                        }
-                    });
                 }
             }
         });
 
-        this.plotUpater.start();
+        this.plotUpdater.start();
     }
 
     /**
      * Increases the desired temperature of the Vape.
      */
+
     private void increaseTemp() {
         if (desiredTemperature < MAXIMUM_TEMPERATURE) {
             desiredTemperature++;
@@ -324,17 +400,48 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (socket.isConnected()) {
                     try {
-                        System.out.println("Sending " + desiredTemperature);
-                        socket.getOutputStream().write(new byte[]{'t', (byte) desiredTemperature});
+                        System.out.println("Sending temp: " + desiredTemperature);
+                        socket.getOutputStream().write(new byte[]{'t', '=', (byte) desiredTemperature});
+                        try {
+                            Thread.sleep(300); // why?
+                        } catch (InterruptedException e) {
+                            // ignore for now
+                        }
+                    } catch (IOException e) {
+                        System.out.println("Could not send temp to Vape " + e.getMessage());
+                    }
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Sends the new PID values to the Vape.
+     */
+    private void sendPID() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (socket.isConnected()) {
+                    try {
+                        Double p = Double.parseDouble(tfdPidP.getText().toString());
+                        Double i = Double.parseDouble(tfdPidI.getText().toString());
+                        Double d = Double.parseDouble(tfdPidD.getText().toString());
+
+                        if (p < 0 || p > 25.5 || i < 0 || i > 25.5 || d < 0 || d > 25.5) {
+                            Toast.makeText(MainActivity.this, "PID values can only be between 0 and 25.5", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        System.out.println("Sending PID: " + p + ", " + i + ", " + d);
+                        socket.getOutputStream().write(new byte[]{'p', '=', (byte) Math.round(p * 10), (byte) Math.round(i * 10), (byte) Math.round(d * 10)});
                         try {
                             Thread.sleep(300);
                         } catch (InterruptedException e) {
                             // ingore for now
                         }
-                        updateDesiredTemp = true;
                     } catch (IOException e) {
                         System.out.println("Could not send temp to Vape " + e.getMessage());
-                        Toast.makeText(MainActivity.this, "Could not send temp to Vape " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
             }

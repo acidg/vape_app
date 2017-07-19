@@ -15,7 +15,7 @@ import android.view.View.OnTouchListener;
  * If it runs slow, it does not generate skipped onClicks. Can be rewritten to
  * achieve this.
  */
-public class TempButtonListener implements OnTouchListener {
+public class TemperatureButtonListener implements OnTouchListener {
     /**
      * The initial time in milliseconds, after which the first button pressed event is fired.
      */
@@ -26,7 +26,7 @@ public class TempButtonListener implements OnTouchListener {
      */
     private static final int SUBSEQUENT_INTERVAL = 50;
 
-    private final TempButtonCallback callback;
+    private final TemperatureButtonCallback callback;
     private Handler handler = new Handler();
     private View downView;
     private Runnable handlerRunnable = new Runnable() {
@@ -38,9 +38,9 @@ public class TempButtonListener implements OnTouchListener {
     };
 
     /**
-     * @param callback        The TempButtonCallback, that will be called periodically
+     * @param callback        The TemperatureButtonCallback, that will be called periodically
      */
-    public TempButtonListener(TempButtonCallback callback) {
+    public TemperatureButtonListener(TemperatureButtonCallback callback) {
         this.callback = callback;
     }
 
@@ -68,7 +68,7 @@ public class TempButtonListener implements OnTouchListener {
         }
     }
 
-    public interface TempButtonCallback {
+    public interface TemperatureButtonCallback {
         /**
          * Called, every tick.
          */

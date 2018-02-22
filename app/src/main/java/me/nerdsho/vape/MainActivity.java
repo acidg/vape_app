@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -145,10 +146,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState != null) {
-            desiredTemperature = savedInstanceState.getInt(DESIRED_TEMPERATURE_BUNDLE_KEY);
-        }
-
         tvCurrentTemperature = (TextView) findViewById(R.id.tvCurrentTemperature);
         tvCurrentHeat = (TextView) findViewById(R.id.tvCurrentHeat);
         tvDesiredTemperature = (TextView) findViewById(R.id.tvDesiredTemperature);
@@ -157,6 +154,11 @@ public class MainActivity extends AppCompatActivity {
         tfdPidP = (EditText) findViewById(R.id.tfdPidP);
         tfdPidI = (EditText) findViewById(R.id.tfdPidI);
         tfdPidD = (EditText) findViewById(R.id.tfdPidD);
+
+        if (savedInstanceState != null) {
+            desiredTemperature = savedInstanceState.getInt(DESIRED_TEMPERATURE_BUNDLE_KEY);
+            tvDesiredTemperature.setText(String.format(Locale.getDefault(),"%d", desiredTemperature));
+        }
 
         initButtons();
         initPlot();
@@ -347,6 +349,7 @@ public class MainActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
+                                        desiredTemperature = Integer.parseInt(values[1]);
                                         tvDesiredTemperature.setText(values[1]);
                                     }
                                 });

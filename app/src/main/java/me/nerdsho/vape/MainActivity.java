@@ -303,7 +303,6 @@ public class MainActivity extends AppCompatActivity {
 
                 while (!Thread.interrupted() && socket.isConnected()) {
                     final String[] values;
-                    final int savedTemperature;
 
                     try {
                         String input = connection.readLine();
@@ -407,6 +406,7 @@ public class MainActivity extends AppCompatActivity {
                         socket.getOutputStream().write(new byte[]{'t', '=', (byte) desiredTemperature});
                         try {
                             Thread.sleep(300); // why?
+                            loadValues();
                         } catch (InterruptedException e) {
                             // ignore for now
                         }
